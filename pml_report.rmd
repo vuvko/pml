@@ -31,7 +31,7 @@ One can note that there is feature "cvtd_timestamp" that also was removed.
 It's because we already has timestamps in good for learning algorithm form.
 Thus we can leave this feature behind.
 
-Now we can set our control of training process (using 20-fold cross validation).
+Now we can set our control of training process (using 10-fold cross validation).
 ```{r}
 trainIdx <- createDataPartition(y=data.reduced$classe, p=0.8, list=FALSE)
 train <- data.reduced[trainIdx,]

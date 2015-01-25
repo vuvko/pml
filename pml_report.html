@@ -440,7 +440,7 @@ summary(data)</code></pre>
 <p>Removing all “bad” features we get new dataset:</p>
 <pre class="r"><code>data.reduced &lt;- data[,c('user_name', 'raw_timestamp_part_1', 'raw_timestamp_part_2', 'new_window', 'num_window', 'roll_belt', 'pitch_belt', 'yaw_belt', 'total_accel_belt', 'gyros_belt_x', 'gyros_belt_y', 'gyros_belt_z', 'accel_belt_x' ,'accel_belt_y' ,'accel_belt_z' ,'magnet_belt_x' ,'magnet_belt_y' ,'magnet_belt_z' ,'roll_arm' ,'pitch_arm' ,'yaw_arm', 'total_accel_arm', 'gyros_arm_x', 'gyros_arm_y', 'gyros_arm_z', 'accel_arm_x', 'accel_arm_y', 'accel_arm_z', 'magnet_arm_x', 'magnet_arm_y', 'magnet_arm_z', 'roll_dumbbell', 'pitch_dumbbell', 'yaw_dumbbell', 'classe')]</code></pre>
 <p>One can note that there is feature “cvtd_timestamp” that also was removed. It’s because we already has timestamps in good for learning algorithm form. Thus we can leave this feature behind.</p>
-<p>Now we can set our control of training process (using 20-fold cross validation).</p>
+<p>Now we can set our control of training process (using 10-fold cross validation).</p>
 <pre class="r"><code>trainIdx &lt;- createDataPartition(y=data.reduced$classe, p=0.8, list=FALSE)
 train &lt;- data.reduced[trainIdx,]
 test &lt;- data.reduced[-trainIdx,]
@@ -449,45 +449,40 @@ train_control &lt;- trainControl(method=&quot;cv&quot;, number=10)</code></pre>
 <div id="model-fitting" class="section level2">
 <h2>Model Fitting</h2>
 <p>Let’s try random forest to fit and understand our data.</p>
-<pre class="r"><code>model &lt;- train(classe~., data=train, trControl=train_control, method=&quot;rf&quot;)</code></pre>
-<pre><code>## Loading required package: randomForest</code></pre>
-<pre><code>## Warning: package 'randomForest' was built under R version 3.0.3</code></pre>
-<pre><code>## randomForest 4.6-10
-## Type rfNews() to see new features/changes/bug fixes.
-## Loading required namespace: e1071</code></pre>
-<pre class="r"><code>predictions &lt;- predict(model, test)
+<pre class="r"><code>model &lt;- train(classe~., data=train, trControl=train_control, method=&quot;rf&quot;)
+predictions &lt;- predict(model, test)
 confusionMatrix(predictions, test$classe)</code></pre>
 <pre><code>## Confusion Matrix and Statistics
 ## 
 ##           Reference
 ## Prediction    A    B    C    D    E
-##          A 1116    0    0    0    0
-##          B    0  759    1    0    0
-##          C    0    0  682    2    0
-##          D    0    0    1  641    0
+##          A 1115    0    0    0    0
+##          B    0  758    0    0    0
+##          C    0    1  684    0    0
+##          D    1    0    0  643    0
 ##          E    0    0    0    0  721
 ## 
 ## Overall Statistics
 ##                                           
-##                Accuracy : 0.999           
-##                  95% CI : (0.9974, 0.9997)
+##                Accuracy : 0.9995          
+##                  95% CI : (0.9982, 0.9999)
 ##     No Information Rate : 0.2845          
 ##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
 ##                                           
-##                   Kappa : 0.9987          
+##                   Kappa : 0.9994          
 ##  Mcnemar's Test P-Value : NA              
 ## 
 ## Statistics by Class:
 ## 
 ##                      Class: A Class: B Class: C Class: D Class: E
-## Sensitivity            1.0000   1.0000   0.9971   0.9969   1.0000
-## Specificity            1.0000   0.9997   0.9994   0.9997   1.0000
-## Pos Pred Value         1.0000   0.9987   0.9971   0.9984   1.0000
-## Neg Pred Value         1.0000   1.0000   0.9994   0.9994   1.0000
+## Sensitivity            0.9991   0.9987   1.0000   1.0000   1.0000
+## Specificity            1.0000   1.0000   0.9997   0.9997   1.0000
+## Pos Pred Value         1.0000   1.0000   0.9985   0.9984   1.0000
+## Neg Pred Value         0.9996   0.9997   1.0000   1.0000   1.0000
 ## Prevalence             0.2845   0.1935   0.1744   0.1639   0.1838
-## Detection Rate         0.2845   0.1935   0.1738   0.1634   0.1838
-## Detection Prevalence   0.2845   0.1937   0.1744   0.1637   0.1838
-## Balanced Accuracy      1.0000   0.9998   0.9982   0.9983   1.0000</code></pre>
+## Detection Rate         0.2842   0.1932   0.1744   0.1639   0.1838
+## Detection Prevalence   0.2842   0.1932   0.1746   0.1642   0.1838
+## Balanced Accuracy      0.9996   0.9993   0.9998   0.9998   1.0000</code></pre>
 <p>We build quite good classifier. Let’s use it for prediction.</p>
 <pre class="r"><code>finalModel &lt;- model</code></pre>
 </div>
