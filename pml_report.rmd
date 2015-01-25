@@ -1,0 +1,78 @@
+---
+title: "Human Activity Recognition"
+author: "Andrey Shadrikov"
+date: "Sunday, January 25, 2015"
+output: html_document
+bibliography: pml.bib
+---
+
+##Data Overview
+
+Data about human activity [from @ugulino2012wearable] taking different exercising.
+
+Let's load our training data (testing data we leave for prediction only).
+```{r,warning=FALSE,message=FALSE}
+library(caret)
+data <- read.table('pml-training.csv', header=TRUE, sep=',', na.strings=c('NA', '#DIV/0!'))
+summary(data)
+```
+
+There are lot of NAs in our data (more that $97.5\%$) in particular features.
+Given there are $126$ such features and we can reduce their number to $34$ removing them give us not only solution from NAs in data but also the acceleration of optimization in machine learning algorithms.
+
+##Preprocessing
+
+Removing all "bad" features we get new dataset:
+```{r}
+data.reduced <- data[,c('user_name', 'raw_timestamp_part_1', 'raw_timestamp_part_2', 'new_window', 'num_window', 'roll_belt', 'pitch_belt', 'yaw_belt', 'total_accel_belt', 'gyros_belt_x', 'gyros_belt_y', 'gyros_belt_z', 'accel_belt_x' ,'accel_belt_y' ,'accel_belt_z' ,'magnet_belt_x' ,'magnet_belt_y' ,'magnet_belt_z' ,'roll_arm' ,'pitch_arm' ,'yaw_arm', 'total_accel_arm', 'gyros_arm_x', 'gyros_arm_y', 'gyros_arm_z', 'accel_arm_x', 'accel_arm_y', 'accel_arm_z', 'magnet_arm_x', 'magnet_arm_y', 'magnet_arm_z', 'roll_dumbbell', 'pitch_dumbbell', 'yaw_dumbbell', 'classe')]
+```
+
+One can note that there is feature "cvtd_timestamp" that also was removed.
+It's because we already has timestamps in good for learning algorithm form.
+Thus we can leave this feature behind.
+
+Now we can set our control of training process (using 20-fold cross validation).
+```{r}
+trainIdx <- createDataPartition(y=data.reduced$classe, p=0.8, list=FALSE)
+train <- data.reduced[trainIdx,]
+test <- data.reduced[-trainIdx,]
+train_control <- trainControl(method="cv", number=10)
+```
+
+##Model Fitting
+
+Let's try random forest to fit and understand our data.
+```{r, warning=FALSE, message=FALSE}
+model <- train(classe~., data=train, trControl=train_control, method="rf")
+predictions <- predict(model, test)
+confusionMatrix(predictions, test$classe)
+```
+
+We build quite good classifier.
+Let's use it for prediction.
+```{r}
+finalModel <- model
+```
+
+##Predicting
+
+```{r, echo=FALSE}
+pml_write_files <- function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("problem_id_",i,".txt")
+    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
+```
+
+Using our final model predicting our goal:
+```{r}
+data.test <- read.table('pml-testing.csv', header=TRUE, sep=',', na.strings=c('NA', '#DIV/0!'))
+data.test.reduced <- data.test[,c('user_name', 'raw_timestamp_part_1', 'raw_timestamp_part_2', 'new_window', 'num_window', 'roll_belt', 'pitch_belt', 'yaw_belt', 'total_accel_belt', 'gyros_belt_x', 'gyros_belt_y', 'gyros_belt_z', 'accel_belt_x' ,'accel_belt_y' ,'accel_belt_z' ,'magnet_belt_x' ,'magnet_belt_y' ,'magnet_belt_z' ,'roll_arm' ,'pitch_arm' ,'yaw_arm', 'total_accel_arm', 'gyros_arm_x', 'gyros_arm_y', 'gyros_arm_z', 'accel_arm_x', 'accel_arm_y', 'accel_arm_z', 'magnet_arm_x', 'magnet_arm_y', 'magnet_arm_z', 'roll_dumbbell', 'pitch_dumbbell', 'yaw_dumbbell')]
+answer <- predict(finalModel, data.test.reduced)
+pml_write_files(answer)
+```
+
+##References
+
